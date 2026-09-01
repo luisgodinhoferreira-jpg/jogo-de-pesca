@@ -1,790 +1,854 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>SS TUNA - Scale the Depths</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SS. LIGMA - Phaser 3 (Escamas)</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       image-rendering: pixelated;
-      image-rendering: crisp-edges;
     }
 
     body {
-      background: #0f172a;
+      background: #020617;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       min-height: 100vh;
+      overflow: hidden;
       font-family: 'Courier New', monospace;
-      overflow: hidden;
-      touch-action: none;
-      user-select: none;
-      color: #000;
     }
 
-    #game-wrapper {
+    #game-container {
       position: relative;
-      border: 4px solid #0f172a;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      background: #38bdf8;
-      line-height: 0;
-      overflow: hidden;
+      border: 4px solid #000;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
     }
 
-    canvas {
-      display: block;
-      cursor: crosshair;
-      width: 100%;
-      max-width: 420px;
-      height: auto;
-    }
-
-    #ui {
+    #hud {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 10px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
       pointer-events: none;
       z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s;
     }
 
-    .hud-box {
-      background: #ffffff;
-      border: 3px solid #0f172a;
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 3px 3px 0 #0f172a;
+    #hud.show {
+      opacity: 1;
     }
 
-    .hearts {
-      display: flex;
-      gap: 4px;
-    }
-
-    .heart {
-      width: 14px;
-      height: 12px;
-      background: #ef4444;
-      clip-path: path('M7 12 L0 4 Q0 0 3.5 0 Q7 0 7 3.5 Q7 0 10.5 0 Q14 0 14 4 Z');
-    }
-
-    .heart.empty {
-      background: #cbd5e1;
-    }
-
-    #score-box {
-      text-align: center;
-    }
-
-    #score {
-      font-size: 15px;
-      color: #15803d;
-    }
-
-    #depth-label {
-      font-size: 10px;
-      color: #334155;
-      margin-top: 2px;
-    }
-
-    .btn-icon {
-      width: 32px;
-      height: 32px;
-      background: #f59e0b;
-      border: 3px solid #0f172a;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #000;
-      font-weight: bold;
-      pointer-events: auto;
-      cursor: pointer;
-      box-shadow: 3px 3px 0 #0f172a;
-    }
-
-    #overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(56, 189, 248, 0.95);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #0f172a;
-      z-index: 20;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #overlay h2 {
-      font-size: 2.2rem;
-      margin-bottom: 4px;
-      text-shadow: 2px 2px 0 #fff;
-    }
-
-    #overlay p {
-      margin-bottom: 16px;
-      font-size: 0.85rem;
-      line-height: 1.4;
-      font-weight: bold;
-    }
-
-    button {
-      background: #ea580c;
-      color: #fff;
-      border: 3px solid #0f172a;
-      padding: 10px 24px;
-      font-size: 1rem;
-      font-family: inherit;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 8px;
-      box-shadow: 3px 3px 0 #0f172a;
-    }
-
-    button:active {
-      transform: translate(2px, 2px);
-      box-shadow: 1px 1px 0 #0f172a;
-    }
-
-    #shop {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
-      padding: 10px;
-      display: none;
-      z-index: 15;
-      border-top: 4px solid #0f172a;
-    }
-
-    #shop h3 {
-      font-size: 12px;
-      color: #0f172a;
-      margin-bottom: 8px;
-      text-align: center;
-    }
-
-    .shop-row {
+    .stats-group {
       display: flex;
       gap: 6px;
-      justify-content: center;
       flex-wrap: wrap;
     }
 
-    .shop-btn {
-      background: #f1f5f9;
-      border: 2px solid #0f172a;
-      color: #0f172a;
-      padding: 6px 8px;
-      font-size: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      min-width: 85px;
-      text-align: center;
-      box-shadow: 2px 2px 0 #0f172a;
+    .hud-box {
+      background: #fff;
+      border: 3px solid #000;
+      padding: 2px 8px;
+      font-weight: 900;
+      font-size: 14px;
+      box-shadow: 3px 3px 0 #000;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .shop-btn .price {
-      color: #15803d;
-      display: block;
-      font-size: 10px;
+    .hud-btn-group {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .btn-hud {
+      background: #22c55e;
+      border: 3px solid #000;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .btn-hud.close {
+      background: #ef4444;
+    }
+
+    #shop-modal {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 460px;
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 8px 8px 0 #000;
+      padding: 18px;
+      z-index: 20;
+      max-height: 90%;
+      overflow-y: auto;
+    }
+
+    #shop-modal h2 {
+      margin-bottom: 12px;
+      text-align: center;
+      border-bottom: 3px solid #000;
+      padding-bottom: 6px;
+    }
+
+    .shop-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      background: #f1f5f9;
+      padding: 8px;
+      border: 2px solid #000;
+    }
+
+    .shop-item button {
+      background: #22c55e;
+      border: 2px solid #000;
+      padding: 4px 10px;
       font-weight: bold;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .sell-btn {
+      background: #3b82f6 !important;
+    }
+
+    .close-shop-btn {
+      background: #ef4444 !important;
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px;
+      border: 2px solid #000;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
     }
 
     #hint {
-      margin-top: 12px;
-      color: #94a3b8;
-      font-size: 0.75rem;
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 6px 14px;
+      border: 2px solid #000;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 15;
+      pointer-events: none;
       text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #hint.show {
+      opacity: 1;
+    }
+
+    #message {
+      position: absolute;
+      top: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 7px 18px;
+      border: 3px solid #000;
+      font-weight: 900;
+      font-size: 14px;
+      display: none;
+      z-index: 15;
     }
   </style>
 </head>
 
 <body>
-  <div id="game-wrapper">
-    <canvas id="game" width="420" height="640"></canvas>
-    <div id="ui">
-      <div class="hud-box">
-        <div class="hearts" id="hearts"></div>
+  <div id="game-container">
+    <div id="hud">
+      <div class="stats-group">
+        <div class="hud-box">🐟 <span id="ui-fish">0</span></div>
+        <div class="hud-box">⚪ <span id="ui-scale-c">0</span></div>
+        <div class="hud-box">🔵 <span id="ui-scale-r">0</span></div>
+        <div class="hud-box">🟡 <span id="ui-scale-l">0</span></div>
+        <div class="hud-box">💰 <span id="ui-money">10</span></div>
       </div>
-      <div class="hud-box" id="score-box">
+      <div class="hud-btn-group">
+        <button class="btn-hud" onclick="toggleShop(true)">$</button>
+        <button class="btn-hud close" onclick="location.reload()">✕</button>
+      </div>
+    </div>
+
+    <div id="shop-modal">
+      <h2>LOJA</h2>
+
+      <div style="font-weight:bold; margin-bottom:6px;">Melhorias</div>
+      <div class="shop-item">
         <div>
-          <div id="score">$ 0</div>
-          <div id="depth-label">0m</div>
+          <strong>Velocidade do Anzol</strong><br>
+          <small>Nível: <span id="lvl-speed">1</span></small>
         </div>
+        <button onclick="buyUpgrade('speed')">R$ <span id="cost-speed">15</span></button>
       </div>
-      <div class="right-ui">
-        <div class="btn-icon" id="btnShop" title="Loja">🛒</div>
+      <div class="shop-item">
+        <div>
+          <strong>Alcance / Linha</strong><br>
+          <small>Nível: <span id="lvl-depth">1</span></small>
+        </div>
+        <button onclick="buyUpgrade('depth')">R$ <span id="cost-depth">20</span></button>
       </div>
-    </div>
-    <div id="shop">
-      <h3>EQUIPAMENTOS DE PESCA</h3>
-      <div class="shop-row">
-        <button class="shop-btn" id="upLine">Linha +<span class="price">$25</span></button>
-        <button class="shop-btn" id="upHook">Anzol +<span class="price">$40</span></button>
-        <button class="shop-btn" id="upSpeed">Velocidade<span class="price">$30</span></button>
-        <button class="shop-btn" id="upLuck">Sorte<span class="price">$50</span></button>
+
+      <div style="font-weight:bold; margin:14px 0 6px;">Vender Escamas</div>
+      <div class="shop-item">
+        <div>Escama Comum <small>(x<span id="sell-c">0</span>)</small></div>
+        <button class="sell-btn" onclick="sellScale('common')">Vender $3</button>
       </div>
+      <div class="shop-item">
+        <div>Escama Rara <small>(x<span id="sell-r">0</span>)</small></div>
+        <button class="sell-btn" onclick="sellScale('rare')">Vender $12</button>
+      </div>
+      <div class="shop-item">
+        <div>Escama Lendária <small>(x<span id="sell-l">0</span>)</small></div>
+        <button class="sell-btn" onclick="sellScale('legend')">Vender $35</button>
+      </div>
+
+      <button class="close-shop-btn" onclick="toggleShop(false)">FECHAR</button>
     </div>
-    <div id="overlay">
-      <h2>SS TUNA</h2>
-      <p style="opacity:0.8;">Simulador Realista de Pesca</p>
-      <p>Clique/Toque para soltar a linha.<br><b>Mova o cursor/dedo na água</b> para guiar o anzol!<br><br>
-        Colete peixes e desvie dos perigos.
-      </p>
-      <button id="startBtn">PESCAR</button>
-    </div>
-  </div>
-  <div id="hint">
-    Mova o mouse/dedo lateralmente para controlar o anzol na água
+
+    <div id="hint">← → lados | ESPAÇO lançar/recolher | ↑↓ anzol | E processar | F alimentar tartaruga</div>
+    <div id="message"></div>
   </div>
 
   <script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-
-    const overlay = document.getElementById('overlay');
-    const startBtn = document.getElementById('startBtn');
-    const scoreEl = document.getElementById('score');
-    const depthEl = document.getElementById('depth-label');
-    const heartsEl = document.getElementById('hearts');
-    const shopEl = document.getElementById('shop');
-
-    let running = false;
-    let money = 0;
-    let lives = 3;
-    let frame = 0;
-    let shopOpen = false;
-
-    let lineMaxDepth = 280;
-    let hookSize = 10;
-    let dropSpeed = 2.8;
-    let reelSpeed = 3.6;
-    let moveSpeed = 3.5;
-    let luck = 1;
-
-    let lineState = 'ready';
-    let lineY = 0;
-    let caughtFish = null;
-
-    let hookX = 210;
-    let targetX = 210;
-
-    let camY = 0;
-
-    let fishes = [];
-    let obstacles = [];
-    let particles = [];
-    let bubbles = [];
-
-    const boat = { x: 155, y: 125 };
-
-    const FISH_TYPES = [
-      { name: 'Sardinha', minD: 20, maxD: 120, value: 3, color: '#3b82f6', belly: '#93c5fd', w: 22, h: 10, rare: 0 },
-      { name: 'Atum', minD: 80, maxD: 220, value: 8, color: '#1e3a8a', belly: '#60a5fa', w: 30, h: 14, rare: 0 },
-      { name: 'Salmão', minD: 140, maxD: 320, value: 15, color: '#f97316', belly: '#fed7aa', w: 28, h: 13, rare: 0.15 },
-      { name: 'Peixe-lua', minD: 250, maxD: 450, value: 28, color: '#eab308', belly: '#fef08a', w: 32, h: 22, rare: 0.35 },
-      { name: 'Lula', minD: 300, maxD: 520, value: 40, color: '#a855f7', belly: '#e9d5ff', w: 24, h: 28, rare: 0.5 },
-      { name: 'Tubarão', minD: 400, maxD: 700, value: 70, color: '#475569', belly: '#cbd5e1', w: 46, h: 18, rare: 0.65 },
-      { name: 'Kraken', minD: 550, maxD: 900, value: 150, color: '#111827', belly: '#4b5563', w: 54, h: 36, rare: 0.85 }
-    ];
-
-    function px(x, y, w, h, c) {
-      ctx.fillStyle = c;
-      ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    // ========== ÁUDIO ==========
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    function playSound(type) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
 
-    function drawBackground() {
-      const surfaceY = 160 - camY;
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(0, 0, canvas.width, Math.max(0, surfaceY));
-
-      if (surfaceY > 0) {
-        px(20, surfaceY - 110, 70, 18, '#ffffff');
-        px(35, surfaceY - 120, 45, 10, '#ffffff');
-        px(250, surfaceY - 130, 90, 22, '#ffffff');
-
-        ctx.fillStyle = '#86efac';
-        ctx.beginPath();
-        ctx.arc(40, surfaceY, 35, Math.PI, 0);
-        ctx.arc(380, surfaceY, 50, Math.PI, 0);
-        ctx.fill();
-
-        px(380, surfaceY - 28, 5, 28, '#78350f');
-        px(368, surfaceY - 36, 28, 8, '#15803d');
-      }
-
-      const waterStart = Math.max(0, surfaceY);
-      for (let i = 0; i < 25; i++) {
-        const dy = waterStart + i * 26;
-        if (dy > canvas.height) break;
-        const depthFactor = Math.min(1, (camY + dy) / 850);
-        const r = Math.floor(2 + (1 - depthFactor) * 12);
-        const g = Math.floor(40 + (1 - depthFactor) * 110);
-        const b = Math.floor(80 + (1 - depthFactor) * 120);
-        ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.fillRect(0, dy, canvas.width, 28);
-      }
-
-      if (surfaceY > -20 && surfaceY < canvas.height) {
-        ctx.fillStyle = '#bae6fd';
-        for (let x = 0; x < canvas.width; x += 12) {
-          ctx.fillRect(x + Math.sin(frame * 0.04 + x) * 3, surfaceY - 3, 8, 4);
-        }
-      }
-
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.font = '10px monospace';
-      for (let d = 50; d <= 900; d += 50) {
-        const my = d + 160 - camY;
-        if (my > 10 && my < canvas.height - 10) {
-          ctx.fillText(d + 'm', 12, my);
-          px(0, my, canvas.width, 1, 'rgba(255,255,255,0.1)');
-        }
+      const now = audioCtx.currentTime;
+      if (type === 'catch') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(650, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.14);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+        osc.start(now); osc.stop(now + 0.14);
+      } else if (type === 'cast') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.linearRampToValueAtTime(140, now + 0.28);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+        osc.start(now); osc.stop(now + 0.28);
+      } else if (type === 'reel') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(170, now);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc.start(now); osc.stop(now + 0.18);
+      } else if (type === 'process') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.setValueAtTime(520, now + 0.08);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc.start(now); osc.stop(now + 0.18);
+      } else if (type === 'feed') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(480, now);
+        osc.frequency.exponentialRampToValueAtTime(780, now + 0.22);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now); osc.stop(now + 0.25);
+      } else if (type === 'upgrade') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(380, now);
+        osc.frequency.setValueAtTime(620, now + 0.1);
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+        osc.start(now); osc.stop(now + 0.22);
       }
     }
 
-    function drawBoat(x, y) {
-      // Casco com detalhes
-      px(x, y + 10, 110, 16, '#f8fafc');
-      px(x + 5, y + 26, 100, 8, '#dc2626');
-      px(x - 2, y + 8, 114, 3, '#0f172a');
-
-      // Cabine
-      px(x + 35, y - 20, 45, 30, '#64748b');
-      px(x + 30, y - 25, 55, 6, '#334155');
-      px(x + 45, y - 10, 12, 12, '#38bdf8');
-
-      // Pescador Realista (Anatomia Pixelada)
-      const pxX = x + 12;
-      const pxY = y - 12;
-
-      // Galochas / Pernas
-      px(pxX + 2, pxY + 16, 5, 8, '#1e293b');
-      px(pxX + 8, pxY + 16, 5, 8, '#1e293b');
-
-      // Tronco e Jaqueta Amarela
-      px(pxX, pxY + 4, 14, 13, '#f59e0b');
-      px(pxX + 2, pxY + 6, 10, 10, '#d97706'); // Sombreamento no peito
-
-      // Braços inclinados segurando a vara
-      const armPull = (lineState === 'reeling' || lineState === 'caught') ? Math.sin(frame * 0.3) * 2 : 0;
-      px(pxX - 4, pxY + 6 + armPull, 5, 10, '#f59e0b'); // Braço Esquerdo
-      px(pxX + 11, pxY + 8, 4, 8, '#d97706'); // Braço Direito
-
-      // Mãos (Tom de pele)
-      px(pxX - 6, pxY + 14 + armPull, 3, 3, '#fed7aa');
-      px(pxX + 12, pxY + 14, 3, 3, '#fed7aa');
-
-      // Cabeça / Rosto
-      px(pxX + 3, pxY - 3, 9, 8, '#fed7aa'); // Rosto
-      px(pxX + 9, pxY, 2, 2, '#78350f'); // Olho olhando a água
-
-      // Barba
-      px(pxX + 3, pxY + 3, 8, 3, '#451a03');
-
-      // Chapéu Amarelo de Pescador (Sout'wester)
-      px(pxX + 1, pxY - 6, 13, 4, '#f59e0b');
-      px(pxX - 2, pxY - 3, 18, 2, '#d97706'); // Aba do chapéu
-
-      // Texto do Casco
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 7px monospace';
-      ctx.fillText('SS TUNA', x + 55, y + 20);
-    }
-
-    function drawRod(x, y, tipX, tipY) {
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(x + 10, y + 5);
-      ctx.lineTo(x - 15, y - 20);
-      ctx.stroke();
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(x - 15, y - 20);
-      ctx.lineTo(tipX, tipY);
-      ctx.stroke();
-    }
-
-    function drawHook(hx, hy, size) {
-      px(hx - 4, hy - 8, 8, 6, '#f97316');
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(hx, hy - 2);
-      ctx.lineTo(hx, hy + size);
-      ctx.stroke();
-    }
-
-    function drawFish(f) {
-      const x = f.x, y = f.y - camY;
-      if (y < -40 || y > canvas.height + 40) return;
-      const dir = f.vx > 0 ? 1 : -1;
-      ctx.save();
-
-      if (dir < 0) {
-        ctx.translate(x + f.w, y);
-        ctx.scale(-1, 1);
-      } else {
-        ctx.translate(x, y);
-      }
-
-      const w = f.w;
-      const h = f.h;
-      const c = f.color;
-      const b = f.belly || '#ffffff';
-
-      if (f.name === 'Lula' || f.name === 'Kraken') {
-        // Tentáculos
-        const swimOffset = Math.sin(frame * 0.2) * 3;
-        px(0, 4 + swimOffset, w * 0.4, 3, c);
-        px(0, 10 - swimOffset, w * 0.4, 3, c);
-        px(0, 16 + swimOffset, w * 0.4, 3, c);
-
-        // Cabeça / Manto em Formato Realista
-        px(w * 0.3, 2, w * 0.6, h - 4, c);
-        px(w * 0.5, 0, w * 0.5, h, c);
-        px(w * 0.8, 4, w * 0.2, h - 8, b); // Ponta
-
-        // Olho Grande
-        px(w * 0.4, 6, 4, 4, '#ffffff');
-        px(w * 0.4 + 1, 7, 2, 2, '#0f172a');
-      } else {
-        // Cauda Articulada (Tail Fin)
-        const tailOffset = Math.sin(frame * 0.25) * 2;
-        px(0, 1 + tailOffset, 4, h - 2, c);
-        px(3, 3 + tailOffset, 4, h - 6, c);
-
-        // Corpo Oval/Anatômico
-        px(6, 2, w - 8, h - 4, c);
-        px(10, 0, w - 14, h, c);
-
-        // Barriga com Sombreamento / Gradiente
-        px(10, Math.floor(h * 0.55), w - 16, Math.ceil(h * 0.45), b);
-
-        // Barbatanas DORSAL e PEITORAL
-        px(Math.floor(w * 0.4), -3, 6, 3, c); // Dorsal
-        px(Math.floor(w * 0.3), Math.floor(h * 0.5), 5, 3, '#cbd5e1'); // Peitoral
-
-        // Detalhe de Escamas / Brilho
-        px(Math.floor(w * 0.5), 3, 2, 2, 'rgba(255,255,255,0.6)');
-        px(Math.floor(w * 0.6), 6, 2, 2, 'rgba(255,255,255,0.6)');
-
-        // Olho Vivo
-        px(w - 7, 3, 4, 4, '#ffffff');
-        px(w - 6, 4, 2, 2, '#0f172a');
-      }
-
-      ctx.restore();
-    }
-
-    function drawObstacle(o) {
-      const y = o.y - camY;
-      if (y < -30 || y > canvas.height + 30) return;
-      if (o.type === 'rock') {
-        px(o.x, y, o.w, o.h, '#475569');
-        px(o.x + 2, y + 2, o.w - 4, o.h - 4, '#64748b');
-      } else {
-        px(o.x, y, o.w, o.h, '#b91c1c');
-        px(o.x + 3, y + 3, o.w - 6, o.h - 6, '#ef4444');
-      }
-    }
-
-    function spawnFish() {
-      const depth = camY + 150 + Math.random() * 400;
-      const possible = FISH_TYPES.filter(t => depth >= t.minD && depth <= t.maxD);
-      if (!possible.length) return;
-      let type = possible[Math.floor(Math.random() * possible.length)];
-
-      fishes.push({
-        x: Math.random() < 0.5 ? -40 : canvas.width + 10,
-        y: depth + 160,
-        w: type.w, h: type.h,
-        vx: (Math.random() * 1.2 + 0.6) * (Math.random() < 0.5 ? -1 : 1),
-        color: type.color,
-        belly: type.belly,
-        value: type.value,
-        name: type.name,
-        caught: false
-      });
-    }
-
-    function spawnObstacle() {
-      const depth = camY + 200 + Math.random() * 350;
-      obstacles.push({
-        x: 30 + Math.random() * (canvas.width - 80),
-        y: depth + 160,
-        w: 24,
-        h: 20,
-        type: Math.random() < 0.6 ? 'rock' : 'mine'
-      });
-    }
-
-    function spawnParticle(x, y, color, n = 6) {
-      for (let i = 0; i < n; i++) {
-        particles.push({
-          x, y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 3 - 1,
-          life: 15 + Math.random() * 12, color, size: 3
-        });
-      }
-    }
-
-    function update() {
-      if (!running) return;
-      frame++;
-
-      if (lineState === 'dropping' || lineState === 'reeling' || lineState === 'caught') {
-        const dx = targetX - hookX;
-        hookX += Math.sign(dx) * Math.min(Math.abs(dx), moveSpeed);
-        hookX = Math.max(20, Math.min(canvas.width - 20, hookX));
-      }
-
-      const targetCam = Math.max(0, lineY - 200);
-      camY += (targetCam - camY) * 0.08;
-
-      if (lineState === 'dropping') {
-        lineY += dropSpeed;
-        if (lineY >= lineMaxDepth) {
-          lineY = lineMaxDepth;
-          lineState = 'reeling';
-        }
-      } else if (lineState === 'reeling' || lineState === 'caught') {
-        lineY -= reelSpeed * (caughtFish ? 0.75 : 1);
-        if (lineY <= 0) {
-          lineY = 0;
-          if (caughtFish) {
-            money += caughtFish.value;
-            scoreEl.textContent = '$ ' + money;
-            spawnParticle(hookX, 150, '#f59e0b', 10);
-            caughtFish = null;
-          }
-          lineState = 'ready';
-          camY = 0;
-        }
-      }
-
-      if (frame % 40 === 0 && fishes.length < 15) spawnFish();
-      if (frame % 110 === 0 && obstacles.length < 9) spawnObstacle();
-
-      fishes = fishes.filter(f => {
-        if (f.caught) return true;
-        f.x += f.vx;
-        if (f.x < -50 || f.x > canvas.width + 50) f.vx *= -1;
-
-        if ((lineState === 'dropping' || lineState === 'reeling') && !caughtFish) {
-          const hx = hookX, hy = lineY + 160 + hookSize;
-          if (Math.abs(f.x + f.w / 2 - hx) < (f.w / 2 + hookSize) &&
-            Math.abs(f.y + f.h / 2 - hy) < (f.h / 2 + 8)) {
-            f.caught = true;
-            caughtFish = f;
-            lineState = 'caught';
-            spawnParticle(f.x, f.y - camY, f.color, 8);
-          }
-        }
-        return true;
-      });
-
-      if (caughtFish) {
-        caughtFish.x = hookX - caughtFish.w / 2;
-        caughtFish.y = lineY + 160 + hookSize + 4;
-      }
-
-      if (lineState === 'dropping' || lineState === 'reeling') {
-        const hx = hookX, hy = lineY + 160;
-        for (const o of obstacles) {
-          if (hx > o.x && hx < o.x + o.w && hy > o.y && hy < o.y + o.h) {
-            lives--;
-            updateHearts();
-            spawnParticle(hx, hy - camY, '#ef4444', 12);
-            lineState = 'reeling';
-            caughtFish = null;
-            if (lives <= 0) gameOver();
-            break;
-          }
-        }
-      }
-
-      particles = particles.filter(p => {
-        p.x += p.vx; p.y += p.vy; p.life--; return p.life > 0;
-      });
-    }
-
-    function draw() {
-      drawBackground();
-      obstacles.forEach(drawObstacle);
-      fishes.forEach(f => { if (!f.caught) drawFish(f); });
-
-      const boatScreenY = boat.y - Math.min(camY, 40);
-      if (boatScreenY > -60) {
-        drawBoat(boat.x, boatScreenY);
-        const tipScreenY = 160 + lineY - camY;
-        drawRod(boat.x, boatScreenY, hookX, Math.max(boatScreenY, tipScreenY - hookSize));
-      }
-
-      if (lineState !== 'ready' || lineY > 2) {
-        const hy = 160 + lineY - camY;
-        if (hy > -20 && hy < canvas.height + 20) {
-          drawHook(hookX, hy, hookSize);
-        }
-      }
-
-      if (caughtFish) drawFish(caughtFish);
-
-      particles.forEach(p => {
-        px(p.x, p.y, p.size, p.size, p.color);
-      });
-
-      depthEl.textContent = Math.floor(lineY) + 'm / ' + lineMaxDepth + 'm';
-
-      if (lineState === 'ready' && running) {
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('CLIQUE PARA PESCAR', canvas.width / 2, 80);
-        ctx.textAlign = 'left';
-      }
-      if (caughtFish) {
-        ctx.fillStyle = '#15803d';
-        ctx.font = 'bold 14px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('+' + caughtFish.value + ' ' + caughtFish.name, canvas.width / 2, 60);
-        ctx.textAlign = 'left';
-      }
-    }
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    function handlePointerMove(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      targetX = ((clientX - rect.left) / rect.width) * canvas.width;
-    }
-
-    function toggleLine() {
-      if (!running || shopOpen) return;
-      if (lineState === 'ready') {
-        lineState = 'dropping';
-        lineY = 0;
-        caughtFish = null;
-      } else if (lineState === 'dropping') {
-        lineState = 'reeling';
-      }
-    }
-
-    function updateHearts() {
-      heartsEl.innerHTML = '';
-      for (let i = 0; i < 3; i++) {
-        const h = document.createElement('div');
-        h.className = 'heart' + (i >= lives ? ' empty' : '');
-        heartsEl.appendChild(h);
-      }
-    }
-
-    function gameOver() {
-      running = false;
-      lineState = 'ready';
-      overlay.innerHTML = `
-        <h2>GAME OVER</h2>
-        <p>Sua linha se rompeu!<br>Total Ganho: <strong>$ ${money}</strong></p>
-        <button id="restartBtn">JOGAR NOVAMENTE</button>
-      `;
-      overlay.style.display = 'flex';
-      document.getElementById('restartBtn').onclick = startGame;
-    }
-
-    function startGame() {
-      money = 0; lives = 3; frame = 0;
-      lineMaxDepth = 280; hookSize = 10; dropSpeed = 2.8; reelSpeed = 3.6; moveSpeed = 3.5; luck = 1;
-      lineState = 'ready'; lineY = 0; caughtFish = null; camY = 0;
-      hookX = 210; targetX = 210;
-      fishes = []; obstacles = []; particles = []; bubbles = [];
-      prices.line = 25; prices.hook = 40; prices.speed = 30; prices.luck = 50;
-      scoreEl.textContent = '$ 0';
-      updateHearts();
-      updateShopPrices();
-      overlay.style.display = 'none';
-      shopEl.style.display = 'none';
-      shopOpen = false;
-      running = true;
-    }
-
-    const prices = { line: 25, hook: 40, speed: 30, luck: 50 };
-    function updateShopPrices() {
-      document.getElementById('upLine').innerHTML = `Linha +20m<span class="price">$${prices.line}</span>`;
-      document.getElementById('upHook').innerHTML = `Anzol +<span class="price">$${prices.hook}</span>`;
-      document.getElementById('upSpeed').innerHTML = `Velocidade<span class="price">$${prices.speed}</span>`;
-      document.getElementById('upLuck').innerHTML = `Sorte<span class="price">$${prices.luck}</span>`;
-    }
-
-    function buy(type) {
-      if (type === 'line' && money >= prices.line) {
-        money -= prices.line; lineMaxDepth += 20; prices.line = Math.floor(prices.line * 1.5);
-      } else if (type === 'hook' && money >= prices.hook) {
-        money -= prices.hook; hookSize += 3; prices.hook = Math.floor(prices.hook * 1.6);
-      } else if (type === 'speed' && money >= prices.speed) {
-        money -= prices.speed; dropSpeed += 0.4; reelSpeed += 0.5; moveSpeed += 0.8; prices.speed = Math.floor(prices.speed * 1.5);
-      } else if (type === 'luck' && money >= prices.luck) {
-        money -= prices.luck; luck += 0.35; prices.luck = Math.floor(prices.luck * 1.7);
-      }
-      scoreEl.textContent = '$ ' + money;
-      updateShopPrices();
-    }
-
-    document.getElementById('upLine').onclick = () => buy('line');
-    document.getElementById('upHook').onclick = () => buy('hook');
-    document.getElementById('upSpeed').onclick = () => buy('speed');
-    document.getElementById('upLuck').onclick = () => buy('luck');
-
-    document.getElementById('btnShop').onclick = () => {
-      shopOpen = !shopOpen;
-      shopEl.style.display = shopOpen ? 'block' : 'none';
+    // ========== ESTADO ==========
+    const gameState = {
+      money: 10,
+      // Peixes crus por tipo
+      raw: { common: 0, good: 0, rare: 0, legend: 0 },
+      // Escamas por qualidade
+      scales: { common: 0, rare: 0, legend: 0 },
+      turtleHp: 100,
+      turtleMaxHp: 100,
+      turtleLevel: 1,          // evolução da tartaruga
+      turtleExp: 0,
+      upgrades: {
+        speed: { lvl: 1, cost: 15 },
+        depth: { lvl: 1, cost: 20 }
+      },
+      fishing: false
     };
 
-    window.addEventListener('keydown', e => {
-      if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); toggleLine(); }
-      if (e.key === 'ArrowLeft') targetX -= 20;
-      if (e.key === 'ArrowRight') targetX += 20;
-    });
+    function getTotalRaw() {
+      return gameState.raw.common + gameState.raw.good + gameState.raw.rare + gameState.raw.legend;
+    }
 
-    canvas.addEventListener('mousemove', handlePointerMove);
-    canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+    function createPixelTexture(scene, key, matrix, scale = 2) {
+      const w = matrix[0].length * scale;
+      const h = matrix.length * scale;
+      const g = scene.make.graphics({ x: 0, y: 0, add: false });
+      for (let r = 0; r < matrix.length; r++) {
+        for (let c = 0; c < matrix[r].length; c++) {
+          const color = matrix[r][c];
+          if (color && color !== '.') {
+            g.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+            g.fillRect(c * scale, r * scale, scale, scale);
+          }
+        }
+      }
+      g.generateTexture(key, w, h);
+      g.destroy();
+    }
 
-    canvas.addEventListener('mousedown', toggleLine);
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); toggleLine(); }, { passive: false });
+    // Matrizes (mesmas de antes)
+    const MAT_PLAYER = [
+      ['.', '.', '#166534', '#166534', '#166534', '#166534', '.', '.'],
+      ['.', '#166534', '#22c55e', '#22c55e', '#22c55e', '#22c55e', '#166534', '.'],
+      ['.', '#000', '#fde047', '#fde047', '#fde047', '#fde047', '#000', '.'],
+      ['.', '#000', '#fde047', '#000', '#fde047', '#ffffff', '#000', '.'],
+      ['.', '#000', '#fde047', '#fde047', '#fde047', '#000', '#000', '.'],
+      ['.', '.', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '.', '.'],
+      ['.', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '.'],
+      ['#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c', '#ea580c'],
+      ['.', '#1e3a8a', '#1e3a8a', '.', '.', '#1e3a8a', '#1e3a8a', '.'],
+      ['.', '#1e3a8a', '#1e3a8a', '.', '.', '#1e3a8a', '#1e3a8a', '.']
+    ];
+    const MAT_TURTLE = [
+      ['.', '.', '.', '.', '.', '.', '.', '.', '#3f2a1a', '#5c4033', '#5c4033', '.', '.', '.', '.', '.', '.', '.'],
+      ['.', '.', '.', '.', '.', '.', '.', '#3f2a1a', '#8b5a2b', '#d4a574', '#8b5a2b', '#3f2a1a', '.', '.', '.', '.', '.', '.'],
+      ['.', '.', '.', '.', '.', '.', '#3f2a1a', '#8b5a2b', '#d4a574', '#000', '#d4a574', '#8b5a2b', '#3f2a1a', '.', '.', '.', '.', '.'],
+      ['.', '.', '.', '.', '#1a2e05', '#1a2e05', '#3f6212', '#4d7c0f', '#65a30d', '#4d7c0f', '#3f6212', '#1a2e05', '#1a2e05', '.', '.', '.', '.', '.'],
+      ['.', '.', '.', '#1a2e05', '#3f6212', '#65a30d', '#84cc16', '#3f6212', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#1a2e05', '.', '.', '.', '.'],
+      ['.', '.', '#1a2e05', '#3f6212', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#65a30d', '#84cc16', '#3f6212', '#65a30d', '#3f6212', '#1a2e05', '.', '.', '.'],
+      ['.', '#1a2e05', '#3f6212', '#65a30d', '#84cc16', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#65a30d', '#84cc16', '#65a30d', '#3f6212', '#3f6212', '#1a2e05', '.', '.'],
+      ['#1a2e05', '#3f6212', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#65a30d', '#84cc16', '#3f6212', '#65a30d', '#3f6212', '#1a2e05', '.', '.'],
+      ['#1a2e05', '#3f6212', '#65a30d', '#84cc16', '#65a30d', '#3f6212', '#84cc16', '#65a30d', '#3f6212', '#65a30d', '#84cc16', '#65a30d', '#3f6212', '#65a30d', '#3f6212', '#1a2e05', '.', '.'],
+      ['.', '#1a2e05', '#3f6212', '#65a30d', '#65a30d', '#84cc16', '#65a30d', '#65a30d', '#84cc16', '#65a30d', '#65a30d', '#3f6212', '#65a30d', '#3f6212', '#1a2e05', '.', '.', '.'],
+      ['.', '.', '#1a2e05', '#1a2e05', '#3f6212', '#3f6212', '#3f6212', '#3f6212', '#3f6212', '#3f6212', '#3f6212', '#1a2e05', '#1a2e05', '.', '.', '.', '.', '.'],
+      ['.', '.', '.', '#5c4033', '#8b5a2b', '#5c4033', '.', '.', '.', '.', '.', '#5c4033', '#8b5a2b', '#5c4033', '.', '.', '.', '.'],
+      ['.', '.', '#3f2a1a', '#5c4033', '.', '.', '.', '.', '.', '.', '.', '.', '#5c4033', '#3f2a1a', '.', '.', '.', '.']
+    ];
+    const MAT_FISH = [
+      ['.', '.', '#1e40af', '#1e40af', '.', '.'],
+      ['.', '#1e40af', '#3b82f6', '#3b82f6', '#1e40af', '.'],
+      ['#1e40af', '#3b82f6', '#ffffff', '#3b82f6', '#3b82f6', '#1e40af'],
+      ['.', '#1e40af', '#3b82f6', '#3b82f6', '#1e40af', '.'],
+      ['.', '.', '#1e40af', '#1e40af', '.', '.']
+    ];
+    const MAT_FISH_GOOD = [
+      ['.', '.', '.', '#c2410c', '#c2410c', '#c2410c', '.', '.'],
+      ['.', '.', '#c2410c', '#fb923c', '#fb923c', '#fb923c', '#c2410c', '.'],
+      ['.', '#c2410c', '#fb923c', '#fef08a', '#fb923c', '#fb923c', '#fb923c', '#c2410c'],
+      ['.', '.', '#c2410c', '#fb923c', '#fb923c', '#fb923c', '#c2410c', '.'],
+      ['.', '.', '.', '#c2410c', '#c2410c', '#c2410c', '.', '.']
+    ];
+    const MAT_FISH_RARE = [
+      ['.', '.', '.', '#6b21a8', '#6b21a8', '#6b21a8', '#6b21a8', '.', '.'],
+      ['.', '.', '#6b21a8', '#a855f7', '#a855f7', '#eab308', '#a855f7', '#6b21a8', '.'],
+      ['.', '#6b21a8', '#a855f7', '#eab308', '#fef08a', '#a855f7', '#a855f7', '#a855f7', '#6b21a8'],
+      ['.', '.', '#6b21a8', '#a855f7', '#a855f7', '#a855f7', '#a855f7', '#6b21a8', '.'],
+      ['.', '.', '.', '#6b21a8', '#6b21a8', '#6b21a8', '#6b21a8', '.', '.']
+    ];
+    const MAT_FISH_LEGEND = [
+      ['.', '.', '.', '#b45309', '#b45309', '#b45309', '#b45309', '#b45309', '.', '.'],
+      ['.', '.', '#b45309', '#f59e0b', '#f59e0b', '#fde047', '#f59e0b', '#f59e0b', '#b45309', '.'],
+      ['.', '#b45309', '#f59e0b', '#fde047', '#ffffff', '#fde047', '#f59e0b', '#f59e0b', '#f59e0b', '#b45309'],
+      ['.', '.', '#b45309', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#f59e0b', '#b45309', '.'],
+      ['.', '.', '.', '#b45309', '#b45309', '#b45309', '#b45309', '#b45309', '.', '.']
+    ];
 
-    startBtn.onclick = startGame;
-    updateHearts();
-    loop();
+    // ========== MENU ==========
+    class MenuScene extends Phaser.Scene {
+      constructor() { super('MenuScene'); }
+      create() {
+        this.add.rectangle(480, 270, 960, 540, 0x0ea5e9);
+        this.add.text(480, 130, 'SS. LIGMA', {
+          fontFamily: 'Courier New', fontSize: '62px', color: '#fff',
+          fontStyle: 'bold', stroke: '#000', strokeThickness: 8
+        }).setOrigin(0.5);
+        this.add.text(480, 200, 'PIXEL FISHING', {
+          fontFamily: 'Courier New', fontSize: '26px', color: '#fef08a',
+          fontStyle: 'bold', stroke: '#000', strokeThickness: 4
+        }).setOrigin(0.5);
+
+        const btn = this.add.rectangle(480, 310, 240, 58, 0x22c55e)
+          .setStrokeStyle(4, 0x000).setInteractive({ useHandCursor: true });
+        this.add.text(480, 310, 'JOGAR', {
+          fontFamily: 'Courier New', fontSize: '28px', color: '#fff', fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        btn.on('pointerover', () => btn.setFillStyle(0x16a34a));
+        btn.on('pointerout', () => btn.setFillStyle(0x22c55e));
+        btn.on('pointerdown', () => {
+          initAudio();
+          playSound('upgrade');
+          this.scene.start('GameScene');
+          document.getElementById('hud').classList.add('show');
+          document.getElementById('hint').classList.add('show');
+        });
+
+        this.add.text(480, 410, 'Nova mecânica: Escamas de qualidade!\nPeixes melhores → Escamas melhores → Tartaruga evolui', {
+          fontFamily: 'Courier New', fontSize: '14px', color: '#e0f2fe', align: 'center'
+        }).setOrigin(0.5);
+      }
+    }
+
+    // ========== GAME ==========
+    class GameScene extends Phaser.Scene {
+      constructor() { super('GameScene'); }
+
+      create() {
+        createPixelTexture(this, 'player', MAT_PLAYER, 3);
+        createPixelTexture(this, 'turtle', MAT_TURTLE, 3);
+        createPixelTexture(this, 'fish', MAT_FISH, 2.5);
+        createPixelTexture(this, 'fish_good', MAT_FISH_GOOD, 2.8);
+        createPixelTexture(this, 'fish_rare', MAT_FISH_RARE, 3.1);
+        createPixelTexture(this, 'fish_legend', MAT_FISH_LEGEND, 3.4);
+
+        this.particles = this.add.particles(0, 0, 'fish', {
+          speed: { min: 70, max: 160 },
+          scale: { start: 0.55, end: 0 },
+          lifespan: 550,
+          quantity: 0,
+          tint: [0xfef08a, 0xfb923c, 0xa855f7, 0x38bdf8],
+          emitting: false
+        });
+
+        this.physics.world.setBounds(0, 0, 960, 2000);
+        this.add.rectangle(480, 140, 960, 280, 0x38bdf8);
+        this.add.rectangle(480, 900, 960, 1600, 0x0284c7);
+        this.waves = this.add.graphics();
+        this.add.ellipse(880, 270, 250, 55, 0xfef08a);
+        this.add.ellipse(210, 285, 80, 40, 0x64748b);
+        this.add.ellipse(720, 295, 85, 40, 0x64748b);
+
+        // Barco
+        this.boat = this.add.container(360, 230);
+        const hull = this.add.graphics();
+        hull.fillStyle(0xf8fafc);
+        hull.lineStyle(3, 0x000000);
+        hull.beginPath();
+        hull.moveTo(0, 20); hull.lineTo(240, 20); hull.lineTo(218, 62); hull.lineTo(12, 62);
+        hull.closePath(); hull.fillPath(); hull.strokePath();
+        hull.fillStyle(0xdc2626);
+        hull.beginPath();
+        hull.moveTo(6, 44); hull.lineTo(226, 44); hull.lineTo(218, 62); hull.lineTo(12, 62);
+        hull.closePath(); hull.fillPath(); hull.strokePath();
+        hull.fillStyle(0xcbd5e1);
+        hull.fillRect(48, -32, 108, 52);
+        hull.lineStyle(3, 0x000000);
+        hull.strokeRect(48, -32, 108, 52);
+        hull.fillStyle(0x94a3b8);
+        hull.fillRect(42, -40, 120, 9);
+        hull.strokeRect(42, -40, 120, 9);
+        hull.fillStyle(0x38bdf8);
+        hull.fillCircle(78, -6, 13);
+        hull.fillCircle(118, -6, 13);
+        hull.strokeCircle(78, -6, 13);
+        hull.strokeCircle(118, -6, 13);
+        this.boat.add(hull);
+        this.boat.add(this.add.text(122, 32, 'SS.LIGMA', {
+          fontFamily: 'Courier New', fontSize: '13px', color: '#000', fontStyle: 'bold'
+        }));
+        this.player = this.add.image(95, 28, 'player').setOrigin(0.5, 1);
+        this.boat.add(this.player);
+
+        // Tartaruga + nível
+        this.turtle = this.add.image(710, 280, 'turtle').setOrigin(0.5, 1);
+        this.turtleHpText = this.add.text(635, 205, 'Sea turtle Lv.1', {
+          fontFamily: 'Courier New', fontSize: '13px', color: '#000', fontStyle: 'bold'
+        });
+        this.hpBarBg = this.add.rectangle(690, 230, 104, 14, 0x000000);
+        this.hpBar = this.add.rectangle(690, 230, 100, 10, 0x22c55e);
+
+        this.hook = this.physics.add.sprite(400, 300, null).setVisible(false);
+        this.hook.body.setCircle(10);
+        this.lineGfx = this.add.graphics();
+        this.fishes = this.physics.add.group();
+        this.physics.add.overlap(this.hook, this.fishes, this.catchFish, null, this);
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,E,F,SPACE');
+        this.cameras.main.setBounds(0, 0, 960, 1800);
+        this.cameras.main.setBackgroundColor('#0284c7');
+
+        this.hookBaseX = 0;
+        this.maxDepth = 200;
+        this.sinkSpeed = 0.5;
+        this.playerLocalX = 95;
+        this.spawnTimer = 0;
+
+        this.updateUI();
+      }
+
+      update(time, delta) {
+        const dt = delta / 16.67;
+
+        if (!gameState.fishing) {
+          if (this.cursors.left.isDown || this.keys.A.isDown) this.playerLocalX -= 2.4 * dt;
+          if (this.cursors.right.isDown || this.keys.D.isDown) this.playerLocalX += 2.4 * dt;
+          this.playerLocalX = Phaser.Math.Clamp(this.playerLocalX, 30, 180);
+          this.player.x = this.playerLocalX;
+        }
+
+        this.boat.y = 230 + Math.sin(time / 400) * 3;
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) {
+          if (!gameState.fishing) this.startFishing();
+          else this.stopFishing();
+        }
+
+        if (gameState.fishing) {
+          let sink = this.sinkSpeed;
+          if (this.cursors.up.isDown || this.keys.W.isDown) sink = -1.8;
+          if (this.cursors.down.isDown || this.keys.S.isDown) sink = this.sinkSpeed * 2.2;
+
+          this.hook.y += sink * dt;
+          const side = 2.5 + gameState.upgrades.speed.lvl * 0.3;
+          if (this.cursors.left.isDown || this.keys.A.isDown) this.hook.x -= side * dt;
+          if (this.cursors.right.isDown || this.keys.D.isDown) this.hook.x += side * dt;
+
+          const minY = this.boat.y + 80;
+          const maxY = this.boat.y + 80 + this.maxDepth;
+          this.hook.y = Phaser.Math.Clamp(this.hook.y, minY, maxY);
+          this.hook.x = Phaser.Math.Clamp(this.hook.x, this.hookBaseX - 150, this.hookBaseX + 150);
+
+          this.cameras.main.scrollY = Phaser.Math.Linear(this.cameras.main.scrollY, Math.max(0, this.hook.y - 280), 0.08);
+
+          this.spawnTimer += delta;
+          if (this.spawnTimer > 300) {
+            this.spawnTimer = 0;
+            this.spawnFish();
+          }
+          this.drawLine();
+        } else {
+          this.cameras.main.scrollY = Phaser.Math.Linear(this.cameras.main.scrollY, 0, 0.1);
+          this.lineGfx.clear();
+        }
+
+        // Processar peixe → escamas (E)
+        if (Phaser.Input.Keyboard.JustDown(this.keys.E)) {
+          this.processFish();
+        }
+
+        // Alimentar tartaruga (F)
+        if (Phaser.Input.Keyboard.JustDown(this.keys.F)) {
+          this.feedTurtle();
+        }
+
+        this.fishes.getChildren().forEach(f => {
+          if (Math.abs(f.x - this.hook.x) > 500 || Math.abs(f.y - this.hook.y) > 300) f.destroy();
+        });
+
+        this.drawWaves(time);
+      }
+
+      startFishing() {
+        gameState.fishing = true;
+        this.hookBaseX = this.boat.x + this.playerLocalX - 40;
+        this.hook.x = this.hookBaseX;
+        this.hook.y = this.boat.y + 90;
+        this.hook.setVisible(true);
+        this.maxDepth = 160 + gameState.upgrades.depth.lvl * 60;
+        this.sinkSpeed = 0.40 + gameState.upgrades.speed.lvl * 0.18;
+        playSound('cast');
+        this.showMsg('Anzol descendo...');
+      }
+
+      stopFishing() {
+        gameState.fishing = false;
+        this.hook.setVisible(false);
+        this.fishes.clear(true, true);
+        playSound('reel');
+        this.showMsg('Linha recolhida');
+      }
+
+      // ===== PROCESSAR PEIXE EM ESCAMAS =====
+      processFish() {
+        // Prioridade: legend > rare > good > common
+        let type = null;
+        if (gameState.raw.legend > 0) type = 'legend';
+        else if (gameState.raw.rare > 0) type = 'rare';
+        else if (gameState.raw.good > 0) type = 'good';
+        else if (gameState.raw.common > 0) type = 'common';
+
+        if (!type) {
+          this.showMsg('Nenhum peixe para processar!');
+          return;
+        }
+
+        gameState.raw[type]--;
+
+        // Conversão para escamas
+        if (type === 'common') {
+          gameState.scales.common += 1;
+          this.showMsg('+1 Escama Comum');
+        } else if (type === 'good') {
+          gameState.scales.common += 1;
+          gameState.scales.rare += 1;
+          this.showMsg('+1 Comum +1 Rara');
+        } else if (type === 'rare') {
+          gameState.scales.rare += 2;
+          this.showMsg('+2 Escamas Raras');
+        } else if (type === 'legend') {
+          gameState.scales.rare += 1;
+          gameState.scales.legend += 2;
+          this.showMsg('+1 Rara +2 Lendárias!');
+        }
+
+        playSound('process');
+        this.updateUI();
+      }
+
+      // ===== ALIMENTAR TARTARUGA =====
+      feedTurtle() {
+        if (this.playerLocalX <= 130) {
+          this.showMsg('Chegue mais perto da tartaruga!');
+          return;
+        }
+
+        // Prioridade de alimentação: legend > rare > common
+        let used = null;
+        let hpGain = 0;
+        let moneyGain = 0;
+        let expGain = 0;
+
+        if (gameState.scales.legend > 0) {
+          used = 'legend';
+          gameState.scales.legend--;
+          hpGain = 28;
+          moneyGain = 28 + Math.floor(Math.random() * 15);
+          expGain = 25;
+        } else if (gameState.scales.rare > 0) {
+          used = 'rare';
+          gameState.scales.rare--;
+          hpGain = 16;
+          moneyGain = 12 + Math.floor(Math.random() * 10);
+          expGain = 10;
+        } else if (gameState.scales.common > 0) {
+          used = 'common';
+          gameState.scales.common--;
+          hpGain = 9;
+          moneyGain = 5 + Math.floor(Math.random() * 6);
+          expGain = 3;
+        } else {
+          this.showMsg('Sem escamas!');
+          return;
+        }
+
+        gameState.turtleHp = Math.min(gameState.turtleMaxHp, gameState.turtleHp + hpGain);
+        gameState.money += moneyGain;
+        gameState.turtleExp += expGain;
+
+        // Evolução da tartaruga
+        const needExp = gameState.turtleLevel * 40;
+        if (gameState.turtleExp >= needExp) {
+          gameState.turtleExp -= needExp;
+          gameState.turtleLevel++;
+          gameState.turtleMaxHp += 20;
+          gameState.turtleHp = gameState.turtleMaxHp;
+          this.showMsg(`Tartaruga evoluiu para Lv.${gameState.turtleLevel}!`);
+        } else {
+          this.showMsg(`+${hpGain} HP  +$${moneyGain}  (+${expGain} EXP)`);
+        }
+
+        playSound('feed');
+        this.updateUI();
+        this.updateTurtleHp();
+      }
+
+      drawLine() {
+        this.lineGfx.clear();
+        const tipX = this.boat.x + this.playerLocalX - 40;
+        const tipY = this.boat.y - 10;
+        this.lineGfx.lineStyle(3, 0xf8fafc);
+        this.lineGfx.lineBetween(tipX, tipY, this.hook.x, this.hook.y);
+        this.lineGfx.fillStyle(0xe2e8f0);
+        this.lineGfx.fillRect(this.hook.x - 6, this.hook.y - 3, 12, 6);
+        this.lineGfx.fillStyle(0xef4444);
+        this.lineGfx.fillTriangle(this.hook.x - 2, this.hook.y + 3, this.hook.x - 9, this.hook.y + 14, this.hook.x + 3, this.hook.y + 10);
+      }
+
+      drawWaves(time) {
+        this.waves.clear();
+        this.waves.fillStyle(0xe0f2fe, 0.9);
+        this.waves.beginPath();
+        this.waves.moveTo(0, 278);
+        for (let x = 0; x <= 960; x += 40) {
+          this.waves.lineTo(x, 268 + Math.sin((x + time * 0.04) / 30) * 5);
+        }
+        this.waves.lineTo(960, 300);
+        this.waves.lineTo(0, 300);
+        this.waves.closePath();
+        this.waves.fillPath();
+      }
+
+      spawnFish() {
+        if (this.fishes.getLength() >= 18) return;
+        const depthFactor = Math.min(1, (this.hook.y - (this.boat.y + 80)) / this.maxDepth);
+        let amount = 1;
+        if (depthFactor > 0.25) amount = 2;
+        if (depthFactor > 0.50) amount = 3;
+        if (depthFactor > 0.75) amount = 4;
+
+        for (let i = 0; i < amount; i++) {
+          if (this.fishes.getLength() >= 18) break;
+          const fromLeft = Math.random() > 0.5;
+          let type = 'common', key = 'fish';
+          const roll = Math.random();
+          if (depthFactor > 0.70 && gameState.upgrades.depth.lvl >= 3 && roll < 0.18) {
+            type = 'legend'; key = 'fish_legend';
+          } else if (depthFactor > 0.45 && gameState.upgrades.depth.lvl >= 2 && roll < 0.32) {
+            type = 'rare'; key = 'fish_rare';
+          } else if (depthFactor > 0.18 && roll < 0.50) {
+            type = 'good'; key = 'fish_good';
+          }
+
+          const x = fromLeft ? this.hook.x - 280 - Math.random() * 100 : this.hook.x + 280 + Math.random() * 100;
+          const y = this.hook.y - 90 + Math.random() * 180;
+          const fish = this.fishes.create(x, y, key);
+          fish.setVelocityX(fromLeft ? 40 + Math.random() * 40 : -40 - Math.random() * 40);
+          fish.fishType = type;
+          fish.setFlipX(!fromLeft);
+        }
+      }
+
+      catchFish(hook, fish) {
+        const t = fish.fishType || 'common';
+        gameState.raw[t]++;
+
+        let msg = '+1 Peixe Comum';
+        if (t === 'good') msg = '+1 Peixe Médio';
+        if (t === 'rare') msg = '+1 Peixe Raro!';
+        if (t === 'legend') msg = '+1 Peixe LENDÁRIO!!!';
+
+        this.particles.setPosition(fish.x, fish.y);
+        this.particles.explode(12);
+        playSound('catch');
+        this.showMsg(msg);
+        fish.destroy();
+        this.updateUI();
+      }
+
+      updateTurtleHp() {
+        this.turtleHpText.setText(`Sea turtle Lv.${gameState.turtleLevel}`);
+        const pct = gameState.turtleHp / gameState.turtleMaxHp;
+        this.hpBar.width = 100 * pct;
+        this.hpBar.fillColor = pct > 0.4 ? 0x22c55e : (pct > 0.2 ? 0xeab308 : 0xdc2626);
+      }
+
+      showMsg(txt) {
+        const el = document.getElementById('message');
+        el.innerText = txt;
+        el.style.display = 'block';
+        clearTimeout(this.msgTimeout);
+        this.msgTimeout = setTimeout(() => el.style.display = 'none', 1700);
+      }
+
+      updateUI() {
+        document.getElementById('ui-fish').textContent = getTotalRaw();
+        document.getElementById('ui-scale-c').textContent = gameState.scales.common;
+        document.getElementById('ui-scale-r').textContent = gameState.scales.rare;
+        document.getElementById('ui-scale-l').textContent = gameState.scales.legend;
+        document.getElementById('ui-money').textContent = gameState.money;
+
+        document.getElementById('lvl-speed').textContent = gameState.upgrades.speed.lvl;
+        document.getElementById('cost-speed').textContent = gameState.upgrades.speed.cost;
+        document.getElementById('lvl-depth').textContent = gameState.upgrades.depth.lvl;
+        document.getElementById('cost-depth').textContent = gameState.upgrades.depth.cost;
+
+        document.getElementById('sell-c').textContent = gameState.scales.common;
+        document.getElementById('sell-r').textContent = gameState.scales.rare;
+        document.getElementById('sell-l').textContent = gameState.scales.legend;
+      }
+    }
+
+    // Funções da loja
+    function toggleShop(open) {
+      document.getElementById('shop-modal').style.display = open ? 'block' : 'none';
+      if (open) {
+        const scene = game.scene.getScene('GameScene');
+        if (scene) scene.updateUI();
+      }
+    }
+
+    function buyUpgrade(type) {
+      const upg = gameState.upgrades[type];
+      if (gameState.money >= upg.cost) {
+        gameState.money -= upg.cost;
+        upg.lvl++;
+        upg.cost = Math.floor(upg.cost * 1.5);
+        playSound('upgrade');
+        const scene = game.scene.getScene('GameScene');
+        if (scene) scene.updateUI();
+      }
+    }
+
+    function sellScale(type) {
+      const prices = { common: 3, rare: 12, legend: 35 };
+      if (gameState.scales[type] > 0) {
+        gameState.scales[type]--;
+        gameState.money += prices[type];
+        playSound('upgrade');
+        const scene = game.scene.getScene('GameScene');
+        if (scene) scene.updateUI();
+      }
+    }
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 960,
+      height: 540,
+      parent: 'game-container',
+      pixelArt: true,
+      backgroundColor: '#0ea5e9',
+      physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 0 }, debug: false }
+      },
+      scene: [MenuScene, GameScene]
+    };
+
+    const game = new Phaser.Game(config);
   </script>
 </body>
 
